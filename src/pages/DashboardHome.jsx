@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, ShoppingBag, Users, Package, RefreshCw, Download, Plus } from 'lucide-react';
-import { getOrders, getProducts, getPlans } from '../services/api';
+import { DollarSign, ShoppingBag, Users, Package, RefreshCw, Plus } from 'lucide-react';
+import { getOrders, getProducts, getPlans, getFinanceSummary } from '../services/api';
 
 const DashboardHome = () => {
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
     activePlans: 0,
-    totalRevenue: '34.000 Kz'
+    totalRevenue: '—'
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,17 +15,22 @@ const DashboardHome = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [productsData, ordersData, plansData] = await Promise.all([
+      const [productsData, ordersData, plansData, financeSummary] = await Promise.all([
         getProducts(),
         getOrders(),
-        getPlans()
+        getPlans(),
+        getFinanceSummary()
       ]);
+
+      const totalRevenue = financeSummary?.totalRevenue != null
+        ? `${Number(financeSummary.totalRevenue).toLocaleString('pt-AO')} Kz`
+        : '—';
 
       setStats({
         totalProducts: productsData.length,
         totalOrders: ordersData.length,
         activePlans: plansData.length,
-        totalRevenue: '34.000 Kz'
+        totalRevenue
       });
       setRecentOrders(ordersData.slice(0, 5));
     } catch (err) {
@@ -38,6 +43,7 @@ const DashboardHome = () => {
   useEffect(() => {
     loadData();
   }, []);
+
 
   return (
     <div>

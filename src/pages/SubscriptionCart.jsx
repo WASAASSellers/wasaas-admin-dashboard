@@ -1,39 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CreditCard, CheckCircle, ShoppingCart } from 'lucide-react';
-import { getPlans, coreApi } from '../services/api';
+import { calculateSubscription, checkoutSubscription } from '../services/api';
+
+const AVAILABLE_MODULES = [
+  { id: 'whatsapp_agent', label: '🤖 Agente Bot WhatsApp', price: 10000 },
+  { id: 'social_hub', label: '📱 Social Media Hub (FB & IG)', price: 8000 },
+  { id: 'storefront_builder', label: '🌐 Construtor Drag & Drop de Sites', price: 12000 },
+];
 
 const SubscriptionCart = () => {
-  const [plans, setPlans] = useState([]);
-  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedModules, setSelectedModules] = useState([]);
+  const [extraAgents, setExtraAgents] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('MulticaixaReference');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      const data = await getPlans();
-      setPlans(data);
-      if (data.length > 0) setSelectedPlanId(data[0].id);
-    };
-    fetchPlans();
-  }, []);
+  const toggleModule = (id) => {
+    setSelectedModules(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
 
-  const handleCheckout = async (e) => {
+  const handleCalculate = async (e) => {
     e.preventDefault();
-    if (!selectedPlanId) return;
-
+    if (selectedModules.length === 0) return;
     setLoading(true);
     setResult(null);
-
     try {
-      const res = await coreApi.post('/subscriptions/calculate-cart', {
-        planId: selectedPlanId,
+      const calc = await calculateSubscription(selectedModules, extraAgents);
+      setResult(calc);
+    } catch {
+      alert('Erro ao calcular subscrição. Verifique se a Core API está ativa.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!result) return;
+    setLoading(true);
+    try {
+      const checkout = await checkoutSubscription({
+        tenantId: 'default',
+        selectedModuleIds: selectedModules,
+        extraAgentsCount: extraAgents,
         paymentMethod,
-        durationInDays: 30
+        paymentDetails: null,
       });
-      setResult(res.data.data);
-    } catch (err) {
-      alert('Erro ao calcular subscrição.');
+      alert(`✅ ${checkout?.message || 'Checkout processado!'}\nRef: ${checkout?.referenceNumber || '—'}`);
+    } catch {
+      alert('Erro ao processar checkout.');
     } finally {
       setLoading(false);
     }
@@ -43,44 +59,52 @@ const SubscriptionCart = () => {
     <div>
       <div className="mb-4">
         <h1 className="header-title">Subscrição & Faturamento</h1>
-        <p className="header-subtitle">Gestão de Carrinho de Subscrição e checkout com Multicaixa Express / Referência.</p>
+        <p className="header-subtitle">Selecione os módulos WASAaS e gere a fatura com Multicaixa Express / Referência.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         <div className="glass-card">
-          <h3 style={{ marginBottom: '1rem' }}>Selecione o Plano desejado</h3>
-          <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Módulos Disponíveis</h3>
+          <form onSubmit={handleCalculate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {AVAILABLE_MODULES.map(mod => (
+              <label key={mod.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedModules.includes(mod.id)}
+                  onChange={() => toggleModule(mod.id)}
+                />
+                <span>{mod.label}</span>
+                <span className="badge-pill badge-success" style={{ marginLeft: 'auto' }}>{mod.price.toLocaleString()} Kz/mês</span>
+              </label>
+            ))}
+
             <div>
-              <label className="stat-label">Plano</label>
-              <select 
-                className="form-control" 
-                value={selectedPlanId} 
-                onChange={e => setSelectedPlanId(e.target.value)}
-              >
-                {plans.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} - {p.price} Kz ({p.deliveriesPerPeriod} entregas)
-                  </option>
-                ))}
-              </select>
+              <label className="stat-label">Agentes Extra</label>
+              <input
+                type="number"
+                className="form-control"
+                min="0"
+                max="20"
+                value={extraAgents}
+                onChange={e => setExtraAgents(Number(e.target.value))}
+              />
             </div>
 
             <div>
               <label className="stat-label">Método de Pagamento</label>
-              <select 
-                className="form-control" 
-                value={paymentMethod} 
+              <select
+                className="form-control"
+                value={paymentMethod}
                 onChange={e => setPaymentMethod(e.target.value)}
               >
                 <option value="MulticaixaReference">Referência Multicaixa</option>
-                <option value="TPA">Multicaixa Express / TPA</option>
-                <option value="Cash">Dinheiro / Transferência</option>
+                <option value="GATEWAY_EXPRESS">Multicaixa Express</option>
               </select>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading || selectedModules.length === 0}>
               <ShoppingCart size={18} />
-              <span>{loading ? 'Calculando...' : 'Calcular & Gerar Fatura'}</span>
+              <span>{loading ? 'Calculando...' : 'Calcular Fatura'}</span>
             </button>
           </form>
         </div>
@@ -89,33 +113,31 @@ const SubscriptionCart = () => {
           <h3 style={{ marginBottom: '1rem' }}>Resumo da Fatura</h3>
           {result ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="text-muted">Plano Selecionado:</span>
-                <strong>{result.planName || 'Plano'}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="text-muted">Preço Base:</span>
-                <span>{result.basePrice} Kz</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="text-muted">Taxa de Entrega:</span>
-                <span>{result.deliveryFee || 1000} Kz</span>
-              </div>
-              <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem' }}>
-                <strong>Total a Pagar:</strong>
-                <strong style={{ color: 'var(--success-color)' }}>{result.totalAmount || result.basePrice} Kz</strong>
-              </div>
-
-              {result.paymentReference && (
-                <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-                  <div className="small text-muted">Referência Multicaixa:</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{result.paymentReference}</div>
+              {result.modules?.map(mod => (
+                <div key={mod.moduleId} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">{mod.name}</span>
+                  <span>{mod.monthlyPriceAoa?.toLocaleString()} Kz</span>
+                </div>
+              ))}
+              {result.extraAgentsPriceAoa > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Agentes Extra</span>
+                  <span>{result.extraAgentsPriceAoa?.toLocaleString()} Kz</span>
                 </div>
               )}
+              <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem' }}>
+                <strong>Total Mensal:</strong>
+                <strong style={{ color: 'var(--success-color)' }}>{result.totalMonthlyAoa?.toLocaleString()} Kz</strong>
+              </div>
+
+              <button className="btn btn-primary" onClick={handleCheckout} disabled={loading} style={{ marginTop: '1rem' }}>
+                <CreditCard size={18} />
+                <span>{loading ? 'Processando...' : 'Confirmar & Pagar'}</span>
+              </button>
             </div>
           ) : (
-            <p className="text-muted">Selecione um plano e clique em calcular para visualizar a fatura.</p>
+            <p className="text-muted">Selecione módulos e clique em calcular para visualizar a fatura.</p>
           )}
         </div>
       </div>
@@ -124,3 +146,4 @@ const SubscriptionCart = () => {
 };
 
 export default SubscriptionCart;
+
