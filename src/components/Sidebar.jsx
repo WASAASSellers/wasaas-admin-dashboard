@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
+  Grid1x2, 
   LayoutDashboard, 
   Package, 
   ShoppingBag, 
@@ -12,67 +13,67 @@ import {
 
 const Sidebar = () => {
   return (
-    <aside className="sidebar">
+    <aside className="admin-sidebar">
       <div className="sidebar-header">
-        <div className="icon-box">
-          <Package size={24} />
-        </div>
-        <div>
-          <h2 className="logo-text">WASAAS</h2>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Admin Portal</span>
-        </div>
+        <a className="brand-mark" href="/">
+          <div className="brand-icon">
+            <Grid1x2 size={22} />
+          </div>
+          <div>
+            <span className="brand-title">adminHMD</span>
+            <span className="brand-subtitle">WASAAS Portal</span>
+          </div>
+        </a>
       </div>
 
-      <ul className="sidebar-menu">
-        <li>
-          <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </NavLink>
-        </li>
+      <nav className="sidebar-nav">
+        <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><LayoutDashboard size={18} /></div>
+          <span>Dashboard</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <Package size={20} />
-            <span>Catálogo & Produtos</span>
-          </NavLink>
-        </li>
+        <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><Package size={18} /></div>
+          <span>Catálogo & Produtos</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <ShoppingBag size={20} />
-            <span>Encomendas</span>
-          </NavLink>
-        </li>
+        <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><ShoppingBag size={18} /></div>
+          <span>Encomendas</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <CreditCard size={20} />
-            <span>Subscrições & Planos</span>
-          </NavLink>
-        </li>
+        <NavLink to="/subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><CreditCard size={18} /></div>
+          <span>Faturamento & Planos</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <LayoutTemplate size={20} />
-            <span>Page Builder</span>
-          </NavLink>
-        </li>
+        <NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><LayoutTemplate size={18} /></div>
+          <span>Page Builder</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/social" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <Share2 size={20} />
-            <span>Redes Sociais</span>
-          </NavLink>
-        </li>
+        <NavLink to="/social" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><Share2 size={18} /></div>
+          <span>Social Hub</span>
+        </NavLink>
 
-        <li>
-          <NavLink to="/whatsapp" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <QrCode size={20} />
-            <span>WhatsApp Connection</span>
-          </NavLink>
-        </li>
-      </ul>
+        <NavLink to="/whatsapp" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><QrCode size={18} /></div>
+          <span>WhatsApp Connection</span>
+        </NavLink>
+      </nav>
+
+      <div className="sidebar-user">
+        <img 
+          className="sidebar-user-avatar" 
+          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
+          alt="Admin Avatar" 
+        />
+        <div className="sidebar-user-info">
+          <strong>Admin Hasan</strong>
+          <small>Portal Manager</small>
+        </div>
+      </div>
     </aside>
   );
 };

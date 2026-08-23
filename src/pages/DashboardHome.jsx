@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Users, DollarSign, Package, RefreshCw } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, RefreshCw, Download, Plus } from 'lucide-react';
 import { getOrders, getProducts, getPlans } from '../services/api';
 
 const DashboardHome = () => {
@@ -41,55 +41,79 @@ const DashboardHome = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-heading">
         <div>
-          <h1 className="header-title">Visão Geral do Negócio</h1>
-          <p className="header-subtitle">Métricas principais e estado do portal em tempo real (100% REST API).</p>
-        </div>
-        <button className="btn btn-secondary" onClick={loadData} disabled={loading}>
-          <RefreshCw size={16} className={loading ? 'spin' : ''} />
-          <span>Atualizar</span>
-        </button>
-      </div>
-
-      <div className="card-grid">
-        <div className="stat-card">
-          <div>
-            <span className="stat-label">Produtos no Catálogo</span>
-            <div className="stat-val">{stats.totalProducts}</div>
-          </div>
-          <div className="icon-box"><Package size={24} /></div>
+          <span className="eyebrow">Visão Geral</span>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Monitore desempenho, vendas, clientes e produtos a partir de um único painel.</p>
         </div>
 
-        <div className="stat-card">
-          <div>
-            <span className="stat-label">Encomendas Totais</span>
-            <div className="stat-val">{stats.totalOrders}</div>
-          </div>
-          <div className="icon-box"><ShoppingBag size={24} /></div>
-        </div>
-
-        <div className="stat-card">
-          <div>
-            <span className="stat-label">Planos de Subscrição</span>
-            <div className="stat-val">{stats.activePlans}</div>
-          </div>
-          <div className="icon-box"><Users size={24} /></div>
-        </div>
-
-        <div className="stat-card">
-          <div>
-            <span className="stat-label">Receita Estimada</span>
-            <div className="stat-val">{stats.totalRevenue}</div>
-          </div>
-          <div className="icon-box"><DollarSign size={24} /></div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-secondary" onClick={loadData} disabled={loading}>
+            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <span>Atualizar</span>
+          </button>
+          <button className="btn btn-primary">
+            <Plus size={16} />
+            <span>Novo Relatório</span>
+          </button>
         </div>
       </div>
 
-      <div className="glass-card">
-        <h3 style={{ marginBottom: '1rem' }}>Encomendas Recentes</h3>
+      <div className="metric-grid">
+        <article className="metric-card metric-primary">
+          <div className="metric-top">
+            <span className="metric-label">Receita Total</span>
+            <div className="metric-icon"><DollarSign size={20} /></div>
+          </div>
+          <div className="metric-value">{stats.totalRevenue}</div>
+          <div className="metric-meta">
+            <span className="badge-pill badge-success">+12.5%</span>
+            <span style={{ color: 'var(--admin-muted)' }}>em relação ao mês passado</span>
+          </div>
+        </article>
+
+        <article className="metric-card metric-success">
+          <div className="metric-top">
+            <span className="metric-label">Encomendas Totais</span>
+            <div className="metric-icon"><ShoppingBag size={20} /></div>
+          </div>
+          <div className="metric-value">{stats.totalOrders}</div>
+          <div className="metric-meta">
+            <span className="badge-pill badge-success">+8.2%</span>
+            <span style={{ color: 'var(--admin-muted)' }}>novas encomendas</span>
+          </div>
+        </article>
+
+        <article className="metric-card metric-warning">
+          <div className="metric-top">
+            <span className="metric-label">Produtos no Catálogo</span>
+            <div className="metric-icon"><Package size={20} /></div>
+          </div>
+          <div className="metric-value">{stats.totalProducts}</div>
+          <div className="metric-meta">
+            <span className="badge-pill badge-success">+5.1%</span>
+            <span style={{ color: 'var(--admin-muted)' }}>itens ativos</span>
+          </div>
+        </article>
+
+        <article className="metric-card metric-danger">
+          <div className="metric-top">
+            <span className="metric-label">Planos de Subscrição</span>
+            <div className="metric-icon"><Users size={20} /></div>
+          </div>
+          <div className="metric-value">{stats.activePlans}</div>
+          <div className="metric-meta">
+            <span className="badge-pill badge-warning">Ativos</span>
+            <span style={{ color: 'var(--admin-muted)' }}>no portal</span>
+          </div>
+        </article>
+      </div>
+
+      <div className="admin-card">
+        <h3 style={{ marginBottom: '1.2rem', fontSize: '1.1rem', fontWeight: 700 }}>Encomendas Recentes</h3>
         {recentOrders.length === 0 ? (
-          <p className="text-muted">Nenhuma encomenda registada até ao momento.</p>
+          <p style={{ color: 'var(--admin-muted)' }}>Nenhuma encomenda registada até ao momento.</p>
         ) : (
           <div className="table-responsive">
             <table>
@@ -97,7 +121,7 @@ const DashboardHome = () => {
                 <tr>
                   <th>Nº Pedido</th>
                   <th>Cliente</th>
-                  <th>Data</th>
+                  <th>Data Agendada</th>
                   <th>Endereço</th>
                   <th>Status</th>
                 </tr>
@@ -110,7 +134,7 @@ const DashboardHome = () => {
                     <td>{new Date(order.scheduledDate).toLocaleDateString()}</td>
                     <td>{order.deliveryAddress}</td>
                     <td>
-                      <span className="badge badge-success">{order.status || 'Ativo'}</span>
+                      <span className="badge-pill badge-success">{order.status || 'Concluído'}</span>
                     </td>
                   </tr>
                 ))}
