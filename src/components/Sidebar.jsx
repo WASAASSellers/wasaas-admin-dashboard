@@ -1,14 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  Grid1x2, 
+  LayoutGrid, 
   LayoutDashboard, 
   Package, 
   ShoppingBag, 
   CreditCard, 
   LayoutTemplate, 
   Share2, 
-  QrCode 
+  QrCode,
+  Users,
+  DollarSign,
+  Settings
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -17,7 +20,7 @@ const Sidebar = () => {
       <div className="sidebar-header">
         <a className="brand-mark" href="/">
           <div className="brand-icon">
-            <Grid1x2 size={22} />
+            <LayoutGrid size={22} />
           </div>
           <div>
             <span className="brand-title">adminHMD</span>
@@ -25,6 +28,7 @@ const Sidebar = () => {
           </div>
         </a>
       </div>
+
 
       <nav className="sidebar-nav">
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
@@ -40,6 +44,16 @@ const Sidebar = () => {
         <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
           <div className="nav-icon"><ShoppingBag size={18} /></div>
           <span>Encomendas</span>
+        </NavLink>
+
+        <NavLink to="/clients" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><Users size={18} /></div>
+          <span>Clientes</span>
+        </NavLink>
+
+        <NavLink to="/finance" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><DollarSign size={18} /></div>
+          <span>Finanças</span>
         </NavLink>
 
         <NavLink to="/subscriptions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
@@ -61,6 +75,11 @@ const Sidebar = () => {
           <div className="nav-icon"><QrCode size={18} /></div>
           <span>WhatsApp Connection</span>
         </NavLink>
+
+        <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <div className="nav-icon"><Settings size={18} /></div>
+          <span>Configurações</span>
+        </NavLink>
       </nav>
 
       <div className="sidebar-user">
@@ -70,12 +89,13 @@ const Sidebar = () => {
           alt="Admin Avatar" 
         />
         <div className="sidebar-user-info">
-          <strong>Admin Hasan</strong>
-          <small>Portal Manager</small>
+          <strong>Admin Portal</strong>
+          <small>WASAAS Manager</small>
         </div>
       </div>
     </aside>
   );
 };
+
 
 export default Sidebar;

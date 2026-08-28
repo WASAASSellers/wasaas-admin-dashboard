@@ -10,9 +10,63 @@ export const whatsappApi = axios.create({ baseURL: WHATSAPP_API_URL });
 export const socialHubApi = axios.create({ baseURL: SOCIAL_HUB_API_URL });
 export const pageBuilderApi = axios.create({ baseURL: PAGE_BUILDER_API_URL });
 
+// Interceptor para injetar JWT Token nas requisições da Core API
+coreApi.interceptors.request.use((config) => {
+    const token = localStorage.getItem('wasaas_auth_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// ─── AUTHENTICATION ──────────────────────────────────────────────────────────
+export const loginUser = async (whatsApp, password) => {
+    const res = await coreApi.post('/auth/login', { whatsApp, password });
+    if (res.data.success && res.data.data?.token) {
+        localStorage.setItem('wasaas_auth_token', res.data.data.token);
+        localStorage.setItem('wasaas_user', JSON.stringify(res.data.data));
+    }
+    return res.data;
+};
+
+export const logoutUser = async () => {
+    try {
+        await coreApi.post('/auth/logout');
+    } catch {
+        // Silently clear local state
+    }
+    localStorage.removeItem('wasaas_auth_token');
+    localStorage.removeItem('wasaas_user');
+};
+
+export const getCurrentUser = () => {
+    const user = localStorage.getItem('wasaas_user');
+    return user ? JSON.parse(user) : null;
+};
+
+export const isAuthenticated = () => {
+    return !!localStorage.getItem('wasaas_auth_token');
+};
+
+// ─── CATALOGUE (PRODUCTS, ADDONS, PLANS) ─────────────────────────────────────
 export const getProducts = async () => {
     const res = await coreApi.get('/catalogue/products');
     return res.data.data?.items ?? [];
+};
+
+export const createProduct = async (productData) => {
+    const res = await coreApi.post('/catalogue/products', productData);
+    return res.data.data;
+};
+
+export const updateProduct = async (id, productData) => {
+    const res = await coreApi.put(`/catalogue/products/${id}`, productData);
+    return res.data.data;
+};
+
+export const deleteProduct = async (id) => {
+    const res = await coreApi.delete(`/catalogue/products/${id}`);
+    return res.data.data;
 };
 
 export const getAddons = async () => {
@@ -20,11 +74,27 @@ export const getAddons = async () => {
     return res.data.data?.items ?? [];
 };
 
+export const createAddon = async (addonData) => {
+    const res = await coreApi.post('/catalogue/addons', addonData);
+    return res.data.data;
+};
+
+export const updateAddon = async (id, addonData) => {
+    const res = await coreApi.put(`/catalogue/addons/${id}`, addonData);
+    return res.data.data;
+};
+
+export const deleteAddon = async (id) => {
+    const res = await coreApi.delete(`/catalogue/addons/${id}`);
+    return res.data.data;
+};
+
 export const getPlans = async () => {
     const res = await coreApi.get('/catalogue/plans');
     return res.data.data?.items ?? [];
 };
 
+// ─── ORDERS ──────────────────────────────────────────────────────────────────
 export const getOrders = async () => {
     const res = await coreApi.get('/orders');
     return res.data.data?.items ?? [];
@@ -35,6 +105,55 @@ export const triggerDailyChoicesNotification = async () => {
     return res.data;
 };
 
+// ─── CLIENTS ─────────────────────────────────────────────────────────────────
+export const getClients = async (pageNumber = 1, pageSize = 50) => {
+    try {
+        const res = await coreApi.get(`/clients?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+        return res.data.data?.items ?? [];
+    } catch {
+        return [];
+    }
+};
+
+export const registerClient = async (clientData) => {
+    const res = await coreApi.post('/clients', clientData);
+    return res.data.data;
+};
+
+// ─── FINANCE & SUMMARY ───────────────────────────────────────────────────────
+export const getFinanceSummary = async (start = null, end = null) => {
+    try {
+        const params = {};
+        if (start) params.start = start;
+        if (end) params.end = end;
+        const res = await coreApi.get('/finance/summary', { params });
+        return res.data.data ?? null;
+    } catch {
+        return null;
+    }
+};
+
+export const addExpense = async (expenseData) => {
+    const res = await coreApi.post('/finance/expenses', expenseData);
+    return res.data.data;
+};
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+export const getSystemSettings = async () => {
+    try {
+        const res = await coreApi.get('/settings');
+        return res.data.data ?? [];
+    } catch {
+        return [];
+    }
+};
+
+export const updateSystemSetting = async (key, value) => {
+    const res = await coreApi.patch(`/settings/${key}`, { value });
+    return res.data.data;
+};
+
+// ─── WHATSAPP ENGINE ─────────────────────────────────────────────────────────
 export const getWhatsAppStatus = async () => {
     try {
         const res = await whatsappApi.get('/status');
@@ -44,7 +163,7 @@ export const getWhatsAppStatus = async () => {
     }
 };
 
-// FIX: Social Hub retorna { success, count, posts } — campo correto é posts
+// ─── SOCIAL HUB ──────────────────────────────────────────────────────────────
 export const getScheduledPosts = async () => {
     try {
         const res = await socialHubApi.get('/posts');
@@ -54,7 +173,6 @@ export const getScheduledPosts = async () => {
     }
 };
 
-// FIX: campo enviado deve ser 'caption', não 'content'
 export const scheduleSocialPost = async (postData) => {
     const payload = {
         caption: postData.content ?? postData.caption,
@@ -65,34 +183,24 @@ export const scheduleSocialPost = async (postData) => {
     return res.data;
 };
 
-// FIX: rota correta é /builder/layout com tenantId como query param
+// ─── PAGE BUILDER ────────────────────────────────────────────────────────────
 const DEFAULT_TENANT_ID = import.meta.env.VITE_TENANT_ID || 'default';
 
 export const getPageLayout = async (tenantId = DEFAULT_TENANT_ID) => {
     try {
         const res = await pageBuilderApi.get(`/builder/layout?tenantId=${tenantId}`);
-        return res.data.blocks ?? [];
+        return res.data.layout?.blocks ?? res.data.blocks ?? [];
     } catch {
         return [];
     }
 };
 
 export const savePageLayout = async (blocks, tenantId = DEFAULT_TENANT_ID) => {
-    const res = await pageBuilderApi.post('/builder/layout', { tenantId, blocks });
+    const res = await pageBuilderApi.post('/builder/layout', { tenantId, layout: { blocks } });
     return res.data;
 };
 
-// Resumo financeiro real da Core API
-export const getFinanceSummary = async () => {
-    try {
-        const res = await coreApi.get('/finance/summary');
-        return res.data.data ?? null;
-    } catch {
-        return null;
-    }
-};
-
-// FIX: rotas corretas para subscrição por módulos
+// ─── SUBSCRIPTIONS ───────────────────────────────────────────────────────────
 export const calculateSubscription = async (selectedModuleIds, extraAgentsCount = 0) => {
     const res = await coreApi.post('/subscriptions/calculate', {
         selectedModuleIds,
@@ -105,3 +213,4 @@ export const checkoutSubscription = async (checkoutData) => {
     const res = await coreApi.post('/subscriptions/checkout', checkoutData);
     return res.data.data?.checkout ?? null;
 };
+
