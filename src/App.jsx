@@ -13,6 +13,8 @@ import WhatsAppPairing from './pages/WhatsAppPairing';
 import SubscriptionCart from './pages/SubscriptionCart';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
+
 
 function AppLayout({ children }) {
   return (
@@ -34,22 +36,23 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         
-        <Route path="/" element={<AppLayout><DashboardHome /></AppLayout>} />
-        <Route path="/products" element={<AppLayout><ProductsPage /></AppLayout>} />
-        <Route path="/orders" element={<AppLayout><OrdersPage /></AppLayout>} />
-        <Route path="/clients" element={<AppLayout><ClientsPage /></AppLayout>} />
-        <Route path="/finance" element={<AppLayout><FinancePage /></AppLayout>} />
-        <Route path="/subscriptions" element={<AppLayout><SubscriptionCart /></AppLayout>} />
-        <Route path="/builder" element={<AppLayout><VisualPageBuilder /></AppLayout>} />
-        <Route path="/social" element={<AppLayout><SocialMediaScheduler /></AppLayout>} />
-        <Route path="/whatsapp" element={<AppLayout><WhatsAppPairing /></AppLayout>} />
-        <Route path="/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+        <Route path="/" element={<ProtectedRoute><AppLayout><DashboardHome /></AppLayout></ProtectedRoute>} />
+        <Route path="/products" element={<ProtectedRoute><AppLayout><ProductsPage /></AppLayout></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute><AppLayout><OrdersPage /></AppLayout></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute><AppLayout><ClientsPage /></AppLayout></ProtectedRoute>} />
+        <Route path="/finance" element={<ProtectedRoute><AppLayout><FinancePage /></AppLayout></ProtectedRoute>} />
+        <Route path="/subscriptions" element={<ProtectedRoute><AppLayout><SubscriptionCart /></AppLayout></ProtectedRoute>} />
+        <Route path="/builder" element={<ProtectedRoute><AppLayout><VisualPageBuilder /></AppLayout></ProtectedRoute>} />
+        <Route path="/social" element={<ProtectedRoute><AppLayout><SocialMediaScheduler /></AppLayout></ProtectedRoute>} />
+        <Route path="/whatsapp" element={<ProtectedRoute><AppLayout><WhatsAppPairing /></AppLayout></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
 
 export default App;
 
